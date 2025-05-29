@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { EarningComponent } from './earning.component';
+import { EarningComponent } from './earning/earning.component';
 
 @Component({
   selector: 'app-root',

@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideState, provideStore } from '@ngrx/store';
 
 import { routes } from './app.routes';
-import { earningReducer } from './earning.reducer';
+import { earningReducer } from './earning/earning.reducer';
 
 export const appConfig: ApplicationConfig = {
   providers: [

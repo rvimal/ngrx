@@ -1,59 +1,143 @@
-# NgrxDemo
+# NgRx Implementation Technical Documentation
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0.
+## Overview
+This document describes the implementation of NgRx state management in the Angular application located in the root folder (`ngrx-demo`). The project demonstrates a simple earnings tracker using NgRx Store, Actions, Reducers, and Selectors.
 
-## Development server
+## Project Structure
+- `src/app/earning.model.ts`: Defines the `Earning` interface, representing an earning record with `id`, `description`, and `amount` fields.
+- `src/app/earning.actions.ts`: Defines NgRx actions for adding, updating, and deleting earnings using `createAction` and `props`.
+- `src/app/earning.reducer.ts`: Contains the reducer and state definition for earnings. Handles state transitions for each action and maintains an array of earnings.
+- `src/app/earning.selectors.ts`: Provides selectors to access earnings state, including a feature selector and a selector for all earnings.
+- `src/app/earning.component.ts`: Standalone Angular component for interacting with the earnings state. Handles user input, dispatches actions, and displays the earnings list.
+- `src/app/app.config.ts`: Configures the NgRx Store and registers the earnings feature state using `provideStore` and `provideState`.
 
-To start a local development server, run:
+## NgRx Setup Details
+### 1. State Model
+- **Earning Interface:**
+  ```typescript
+  export interface Earning {
+    id: number;
+    description: string;
+    amount: number;
+  }
+  ```
+- **EarningState Interface:**
+  ```typescript
+  export interface EarningState {
+    earnings: Earning[];
+  }
+  ```
 
-```bash
-ng serve
+### 2. Actions
+- **addEarning:** Adds a new earning to the state.
+- **updateEarning:** Updates an existing earning by ID.
+- **deleteEarning:** Removes an earning by ID.
+
+Example:
+```typescript
+export const addEarning = createAction('[Earning] Add', props<{ earning: Earning }>());
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 3. Reducer
+- Uses `createReducer` and `on` to handle each action.
+- Returns new state objects for immutability.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+Example:
+```typescript
+export const earningReducer = createReducer(
+  initialState,
+  on(addEarning, (state, { earning }) => ({
+    ...state,
+    earnings: [...state.earnings, earning]
+  })),
+  // ...other handlers...
+);
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### 4. Selectors
+- **Feature Selector:**
+  ```typescript
+  export const selectEarningState = createFeatureSelector<EarningState>('earning');
+  ```
+- **All Earnings Selector:**
+  ```typescript
+  export const selectAllEarnings = createSelector(
+    selectEarningState,
+    (state) => state.earnings
+  );
+  ```
 
-```bash
-ng generate --help
+### 5. Store Configuration
+In `app.config.ts`:
+```typescript
+import { provideState, provideStore } from '@ngrx/store';
+import { earningReducer } from './earning.reducer';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ...other providers...
+    provideStore(),
+    provideState('earning', earningReducer)
+  ]
+};
 ```
 
-## Building
+## Component Integration
+- `EarningComponent` uses the NgRx Store to select and dispatch state changes.
+- Uses `ngModel` for form inputs and dispatches actions on form submission or delete.
+- The component is standalone and imports `CommonModule` and `FormsModule` for template features.
+- The earnings list is displayed reactively using the async pipe.
 
-To build the project run:
-
-```bash
-ng build
+### Example Component Usage
+```html
+<app-earning></app-earning>
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Example Component Logic
+```typescript
+export class EarningComponent {
+  earnings$: Observable<Earning[]>;
+  description = '';
+  amount: number | null = null;
 
-## Running unit tests
+  constructor(private store: Store) {
+    this.earnings$ = this.store.select(selectAllEarnings);
+  }
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+  add() {
+    if (this.description && this.amount != null) {
+      const earning: Earning = {
+        id: Date.now(),
+        description: this.description,
+        amount: this.amount
+      };
+      this.store.dispatch(addEarning({ earning }));
+      this.description = '';
+      this.amount = null;
+    }
+  }
 
-```bash
-ng test
+  remove(id: number) {
+    this.store.dispatch(deleteEarning({ id }));
+  }
+}
 ```
 
-## Running end-to-end tests
+## Best Practices
+- Keep actions, reducers, and selectors in separate files for maintainability.
+- Use feature state names (like `'earning'`) to avoid state collisions.
+- Use selectors for all state reads to enable memoization and better testability.
+- Use immutable state updates in reducers.
+- Use the async pipe in templates to manage subscriptions automatically.
 
-For end-to-end (e2e) testing, run:
+## Extending the Implementation
+- Add more features (e.g., editing earnings, loading from an API) by creating new actions, effects, and selectors.
+- Use NgRx Effects for handling side effects like HTTP requests.
+- Add unit tests for actions, reducers, and selectors.
 
-```bash
-ng e2e
-```
+## References
+- [NgRx Documentation](https://ngrx.io/docs)
+- [Angular Standalone Components](https://angular.dev/guide/standalone-components)
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+---
+This documentation provides a detailed overview of how NgRx is implemented in this Angular project. For more details, see the individual files in the `src/app` directory.

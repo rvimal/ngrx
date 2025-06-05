@@ -2,9 +2,9 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { Earning } from './earning/earning.model';
-import { selectAllEarnings } from './earning/earning.selectors';
-import { addEarning, updateEarning, deleteEarning } from './earning/earning.actions';
+import { Earning } from './earning.model';
+import { selectAllEarnings } from './earning.selectors';
+import { addEarning, updateEarning, deleteEarning } from './earning.actions';
 import { FormsModule } from '@angular/forms';
 
 @Component({
